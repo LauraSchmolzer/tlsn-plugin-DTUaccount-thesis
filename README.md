@@ -55,6 +55,8 @@ This will output the wasm binary in `dist/index.wasm`.
     I have shared an example of how to put this in the settings as a screenshot. 
 5. Run the plugin
 
+![Setting for Proxy and Notary Server](assets/screenshot.png)
+
 <p align="center">
   <img src="assets/screenshot.png" width="400">
 </p>
