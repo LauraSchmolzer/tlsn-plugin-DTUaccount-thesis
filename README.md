@@ -56,7 +56,7 @@ This will output the wasm binary in `dist/index.wasm`.
 5. Run the plugin
 
 <p align="center">
-  <img src="assets/screenshot.png" width="400">
+  <img src="assets/Screenshot.png" width="400">
 </p>
 
 ## Credits
