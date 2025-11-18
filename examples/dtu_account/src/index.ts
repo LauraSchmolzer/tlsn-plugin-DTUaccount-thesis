@@ -6,14 +6,6 @@ npm i
 npm run build
 */
 
-/**
- * Plugin configuration
- * This configurations defines the plugin, most importantly:
- *  * the different steps
- *  * the user data (headers, cookies) it will access
- *  * the web requests it will query (or notarize)
- */
-
 // ------------------------------------ Step 1: validate Host ------------------------------------
 function isValidHost(urlString: string) {
   const url = new URL(urlString);
@@ -24,7 +16,6 @@ function isValidHost(urlString: string) {
  * Implementation of the first (start) plugin step
   */
 export function start() {
-  console.log("Hello from step one");
   if (!isValidHost(Config.get('tabUrl'))) {
     redirect('https://learn.inside.dtu.dk/d2l/home');
     outputJSON(false);
@@ -33,27 +24,23 @@ export function start() {
   outputJSON(true);
 }
 
-/**
- * Implementation of step "two".
- * This step collects and validates authentication cookies and headers for dtu.
- * If all required information, it creates the request object.
- * Note that the url needs to be specified in the `config` too, otherwise the request will be refused.
- */
+
 
 // ------------------------------------ Step 2: request the tokens ------------------------------------
 export function two() {
   const headers =  getHeadersByHost('c58c6536-ab04-4fbd-857b-51831c0efc2f.users.api.brightspace.com');
   let localStorage =  getLocalStorageByHost('learn.inside.dtu.dk');
-  const userId = localStorage["Session.UserId"];
+  const userId = localStorage["Session.UserId"]; // we need the userId in order to build the request URL
 
-  /*!headers['Authorization'] */
  
   if ( !headers['authorization'] || !headers['User-Agent'] || !localStorage){
     outputJSON(false);
-    throw new Error(`cannot find headers  ${JSON.stringify(headers)}  localStorage ${JSON.stringify(localStorage)} and ${JSON.stringify(userId)}} `);
+    //throw new Error(`cannot find headers  ${JSON.stringify(headers)}  localStorage ${JSON.stringify(localStorage)} and ${JSON.stringify(userId)}} `);
+    // This error is used to display the headers and localStorage in the test output for debugging
     return ;
   }
 
+  // the actual request to be notarized and to receive the response from the API
   outputJSON({
     url: `https://c58c6536-ab04-4fbd-857b-51831c0efc2f.users.api.brightspace.com/${userId}`,
     method: 'GET',
@@ -75,16 +62,16 @@ export function parseResp() {
   const params = JSON.parse(bodyString); // parses the notarized JSON response
 
 
-  // Find the entity with class ["display","name"]
+  // find the entity with class ["display","name"]
   const displayNameEntity = params.entities?.find(
     (e: any) => e.class?.includes("display") && e.class?.includes("name") // find the class that uncludes dislpay and name (first one)
   );
 
-  if (displayNameEntity?.properties?.name) { // if the entity and property exist, find the name in this
+  if (displayNameEntity?.properties?.name) { // if the entity and property exist find the user full name
     const fullName = displayNameEntity.properties.name;
 
-    // Build the substring exactly as it appears in JSON
-    const revealed = `"name":"${fullName}"`; // the part we wish to reveal (full name)
+    // build the substring as it appears in JSON
+    const revealed = `"name":"${fullName}"`; // the part we wish to reveal which is the full name of the student
 
     const selectionStart = bodyString.indexOf(revealed); // find where this starts in the full JSON string
     if (selectionStart === -1) {
@@ -95,7 +82,7 @@ export function parseResp() {
 
     const selectionEnd = selectionStart + revealed.length; // find where it ends
 
-    // Split JSON into parts excluding the secret
+    // split JSON into parts excluding the secret
     const secretResps = [
       bodyString.substring(0, selectionStart),
       bodyString.substring(selectionEnd)
@@ -109,9 +96,7 @@ export function parseResp() {
 
 
 // ------------------------------------ Step 3 : Notarize ------------------------------------
-/**
- * Step 3: calls the `notarize` host function
- */
+
 export function three() {
   const params = JSON.parse(Host.inputString());
 
@@ -154,9 +139,8 @@ export function config() {
       ],
       hostFunctions: ['redirect', 'notarize'],
       cookies: ['c58c6536-ab04-4fbd-857b-51831c0efc2f.users.api.brightspace.com'],
-      localStorage: ['learn.inside.dtu.dk'],
-      sessionStorage: ['c58c6536-ab04-4fbd-857b-51831c0efc2f.users.api.brightspace.com'],
-      headers: ['c58c6536-ab04-4fbd-857b-51831c0efc2f.users.api.brightspace.com'],
+      localStorage: ['learn.inside.dtu.dk'], // the local storage keys to be included in the proof are found in the browserdevtools application tab
+      headers: ['c58c6536-ab04-4fbd-857b-51831c0efc2f.users.api.brightspace.com'], // the headers to be used in the request for the proof come from the API
       requests: [
         {
           url: `https://c58c6536-ab04-4fbd-857b-51831c0efc2f.users.api.brightspace.com/*`,
