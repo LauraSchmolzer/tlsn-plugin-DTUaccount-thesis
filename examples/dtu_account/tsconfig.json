@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "module": "ESNext",
+    "target": "ES2020",
+    "moduleResolution": "Node",
+    "noEmit": true,
+    "types": ["@extism/js-pdk"],
+    "allowJs": true,
+
+  },
+  "include": ["src/**/*", "utils"]
+}
